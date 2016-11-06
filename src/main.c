@@ -57,7 +57,7 @@ int main (void)
             }
         }
 	
-		/* 16 spaces to clear */
+		/* Because lcd is 16 characters long(?) add 16 spaces to clear */
         lcd_puts_P(PSTR("                "));
 
         PORTA &= ~_BV(PORTA3);

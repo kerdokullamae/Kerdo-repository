@@ -65,6 +65,6 @@ int uart3_putchar(char c, FILE *stream) {
         uart3_putchar('\r', stream);
     }
     loop_until_bit_is_set(UCSR3A, UDRE3);
-    UDR0 = c;
+    UDR3 = c;
 	return 0;
 }

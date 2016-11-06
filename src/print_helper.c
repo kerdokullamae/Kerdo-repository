@@ -25,3 +25,4 @@ int print_for_human (FILE *stream, const unsigned char *array, const int len) {
     }
     return fprintf(stream, "\n");;
 }
+
