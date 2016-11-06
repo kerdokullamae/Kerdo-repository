@@ -1,47 +1,67 @@
 #include <stdio.h>
+#include <string.h>
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
-#define __ASSERT_USE_STDERR
-#include <assert.h>
+#include "hmi_msg.h"
 #include "uart.h"
+#include "print_helper.h"
+#include "../lib/hd44780_111/hd44780.h"
 
 #define BLINK_DELAY_MS 100
 
 int main (void)
 {
-    /* set pin 3 of PORTA for output*/
-    DDRA |= _BV(DDA3);
-    /* Init error console as stderr in UART3 and print user code info */
+	DDRA |= _BV(DDA3);
+	uart0_init();
     uart3_init();
-    stderr = &uart3_out;
-    fprintf(stderr, "Version: %s built on: %s %s\n",
-            GIT_DESCR, __DATE__, __TIME__);
-    fprintf(stderr, "avr-libc version: %s\n", __AVR_LIBC_VERSION_STRING__);
-    /*End UART3 init and info print */
-    /* Test assert - REMOVE IN FUTURE LABS */
-    char *array;
-    uint32_t i = 1;
-    extern int __heap_start, *__brkval;
-    int v;
-    array = malloc( i * sizeof(char));
-    assert(array);
-    /* End test assert */
+	stdout = stdin = &uart0_io;
+	stderr = &uart3_out;
+	lcd_init();
+	lcd_clrscr();
 
-    while (1) {
-        /* set pin 3 high to turn led on */
+    fprintf_P(stderr, PSTR(prog_version), PSTR(GIT_DESCR), PSTR(__DATE__), PSTR(__TIME__));
+    fprintf_P(stderr, PSTR(libc_version), PSTR(__AVR_LIBC_VERSION_STRING__));
+	fprintf_P(stdout, PSTR(stud_name));
+    fputc('\n', stdout);
+
+	print_ascii_tbl(stdout);
+	unsigned char ascii[128] = {0};
+
+	for (unsigned char i = 0; i < sizeof(ascii); i++) 
+	{
+        ascii[i] = i;
+    }
+
+    print_for_human(stdout, ascii, sizeof(ascii));
+    lcd_puts_P(PSTR(stud_name));
+
+    while (1) 
+	{
         PORTA |= _BV(PORTA3);
         _delay_ms(BLINK_DELAY_MS);
-        /* Test assert - REMOVE IN FUTURE LABS */
-        /* Increase memory allocated for array by 100 chars
-         * until we have eaten it all and print space between Stack and Heap.
-         * Thats how assert works in run-time */
-        array = realloc( array, (i++ * 100) * sizeof(char));
-        fprintf(stderr, "%d ",
-                (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
-        assert(array);
-        /* End test assert */
-        /* set pin 3 low to turn led off */
+
+        char first_letter;
+        fprintf_P(stdout, PSTR(get_months));
+        fscanf(stdin, "%c", &first_letter);
+        fprintf(stdout, "%c\n", first_letter);
+		lcd_goto(0x40);
+        for (int i = 0; i < 6; i++) 
+		{
+            if (!strncmp_P(&first_letter, months[i], 1)) 
+			{
+                fprintf_P(stdout, months[i]);
+                fputc('\n', stdout);
+                lcd_puts_P(months[i]);
+                lcd_putc(' ');
+            }
+        }
+	
+		/* 16 spaces to clear */
+        lcd_puts_P(PSTR("                "));
+
         PORTA &= ~_BV(PORTA3);
         _delay_ms(BLINK_DELAY_MS);
     }
 }
+
