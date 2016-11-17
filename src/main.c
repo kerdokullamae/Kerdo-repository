@@ -24,7 +24,8 @@ static inline void init_system_clock(void)
     TIMSK5 |= _BV(OCIE5A);
 }
 
-static inline void hw_init() {
+static inline void hw_init()
+{
     DDRA |= _BV(DDA3); // setting Arduino pin 25 as output
     uart0_init(UART_BAUD_SELECT(BAUD, F_CPU));
     uart3_init(UART_BAUD_SELECT(BAUD, F_CPU));
@@ -37,33 +38,37 @@ static inline void hw_init() {
 }
 
 // print program version
-static inline void print_prog_version() {
+static inline void print_prog_version()
+{
     fprintf_P(stderr, PSTR(PROG_VERSION),
               PSTR(GIT_DESCR), PSTR(__DATE__), PSTR(__TIME__));
     fprintf_P(stderr, PSTR(LIBC_VERSION), PSTR(__AVR_LIBC_VERSION_STRING__));
 }
 
 // print on program startup
-static inline void print_program_start() {
+static inline void print_program_start()
+{
     fprintf_P(stdout, PSTR(STUD_NAME));
     fputc('\n', stdout);
     lcd_puts_P(PSTR(STUD_NAME));
-
     print_ascii_tbl(stdout);
     unsigned char ascii[128];
+
     for (unsigned char i = 0; i < sizeof(ascii); i++) {
         ascii[i] = i;
     }
-    print_for_human(stdout, ascii, sizeof(ascii));
 
+    print_for_human(stdout, ascii, sizeof(ascii));
     fprintf_P(stdout, PSTR(GET_MONTHS));
 }
 
-static inline void search_for_month() {
+static inline void search_for_month()
+{
     char first_letter;
     fscanf(stdin, "%c", &first_letter);
     fprintf(stdout, "%c\n", first_letter);
     lcd_goto(0x40);
+
     for (int i = 0; i < 6; i++) {
         if (!strncmp_P(&first_letter, (PGM_P)pgm_read_word(&months[i]), 1)) {
             fprintf_P(stdout, (PGM_P)pgm_read_word(&months[i]));
@@ -72,19 +77,23 @@ static inline void search_for_month() {
             lcd_putc(' ');
         }
     }
+
     fprintf_P(stdout, PSTR(GET_MONTHS));
-/* Because lcd is 16 characters long(?) add 16 spaces to clear */
+    /* Because lcd is 16 characters long(?) add 16 spaces to clear */
     lcd_puts_P(PSTR("                "));
 }
 
-static inline void heartbeat() {
+static inline void heartbeat()
+{
     static uint32_t last_time;
     uint32_t cur_time = time;
+
     if ((last_time - cur_time) > 0) {
-        // arduino pin 25 led toggling 
+        // arduino pin 25 led toggling
         PORTA ^= _BV(PORTA3);
         fprintf_P(stderr, PSTR(UPTIME "\n"), cur_time);
     }
+
     last_time = cur_time;
 }
 
@@ -94,10 +103,10 @@ int main (void)
     print_prog_version();
     print_program_start();
 
-
     while (1) {
         heartbeat();
-        if(uart0_available()) {
+
+        if (uart0_available()) {
             search_for_month();
         }
     }
