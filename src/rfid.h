@@ -13,18 +13,23 @@
     You should have received a copy of the GNU General Public License
     along with Foobar.  If not, see <http://www.gnu.org/licenses/>. */
 
-#ifndef UART_WRAPPER_H
-#define UART_WRAPPER_H
+#ifndef _RFID_H_
+#define _RFID_H_
+#include <inttypes.h>
 
-int uart0_putch(char c, FILE *stream);
-int uart0_getch(FILE *stream);
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
 
-int uart3_putch(char c, FILE *stream);
+typedef struct card {
+    uint8_t size;
+    uint8_t uid[10];
+    char *name;
+    struct card *next;
+} card_t;
 
-/* Assign I/O stream to UART */
-FILE uart0_io = FDEV_SETUP_STREAM(uart0_putch, uart0_getch, _FDEV_SETUP_RW);
+extern card_t *head;
 
-FILE uart3_out = FDEV_SETUP_STREAM(uart3_putch, NULL, _FDEV_SETUP_WRITE);
+void check(void);
 
-/* UART_WRAPPER_H */
 #endif
